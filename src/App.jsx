@@ -1,28 +1,49 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react';
+import SplashScreen from './components/SplashScreen';
+import Lobby from './components/Lobby';
+import GameTable from './components/GameTable';
+import WinLoseModal from './components/WinLoseModal';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [screen, setScreen] = useState('splash'); // splash | lobby | game
+  const [player, setPlayer] = useState(() => ({ id: 'P1', name: 'Varun', coins: 500 }));
+  const [modal, setModal] = useState({ open: false, result: null });
+
+  function handleStart() {
+    setScreen('game');
+  }
+
+  function handleEnd(result) {
+    setModal({ open: true, result });
+    setPlayer(p => ({ ...p, coins: p.coins + (result === 'win' ? 150 : result === 'lose' ? -50 : 0) }));
+  }
+
+  function playAgain() {
+    setModal({ open: false, result: null });
+    setScreen('game');
+  }
+
+  function returnToLobby() {
+    setModal({ open: false, result: null });
+    setScreen('lobby');
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Vibe Coding Platform
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Your AI-powered development environment
-        </p>
-        <div className="text-center">
-          <button
-            onClick={() => setCount(count + 1)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-          >
-            Count is {count}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+    <div className="font-['Nunito',_Inter,_system-ui]">
+      {screen === 'splash' && (
+        <SplashScreen onFinish={() => setScreen('lobby')} />
+      )}
 
-export default App
+      {screen === 'lobby' && (
+        <Lobby player={player} onStart={handleStart} />
+      )}
+
+      {screen === 'game' && (
+        <>
+          <GameTable onEnd={handleEnd} />
+          <WinLoseModal open={modal.open} result={modal.result} onPlayAgain={playAgain} onExit={returnToLobby} />
+        </>
+      )}
+    </div>
+  );
+}
